@@ -1,6 +1,5 @@
 programming blog https://codinghorror.com
 code machine-learning https://stackoverflow.com/questions/7523916/return-string-until-matched-string-in-ruby
-blog machine-learning https://coding.com
-code programming https://stackoverflow.com/
-code programming https://stackoverflow.com/
+blog https://coding.com
+code https://stackoverflow.com/
 code machine-learning https://stackoverflow.com/

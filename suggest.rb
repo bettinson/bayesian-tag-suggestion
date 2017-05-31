@@ -18,7 +18,7 @@ class TestTokenizer < Test::Unit::TestCase
       puts "#{l.url} is #{classification.guess} with #{classification.score.to_s} accuracy"
       guess = classification.guess.dup.to_s.encode!('UTF-8', 'UTF-8', :invalid => :replace)
 
-      assert_equal(guess, "programming")
+      assert_equal(guess, "blog")
     end
   end
 end
