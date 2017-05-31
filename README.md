@@ -15,7 +15,6 @@ code machine-learning https://stackoverflow.com/questions/7523916/return-string-
 blog https://coding.com
 code https://stackoverflow.com/
 code machine-learning https://stackoverflow.com/
-
 ```
 
 A query with a link of `https://codinghorror.com` will give us the following probabilities:
