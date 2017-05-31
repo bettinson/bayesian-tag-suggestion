@@ -18,8 +18,7 @@ class LinkTrainer
     @tags = Set.new
     links = Array.new
     @to_train = Array.new
-
-    @keywords_for_tag = Hash.new([])
+    @keywords_for_tag = Hash.new { |h, k| h[k] = Set.new }
 
     # Splits each line into the tags
     training_file.each_line do |tf|
@@ -68,16 +67,14 @@ class LinkTrainer
       return
     end
 
-    tags.each do |t|
-      @tags << t
-      @training[t] ||= Hash.new(0)
-    end
-
     # Tokenizes a URL into pieces
     # EG: codinghorror.com -> coding horror
     # Not the best approach but it works for now
-    # Not implemented
-    token = Tokenizer.tokenize(url)
+    # Not implemented, just puts a URL right now
+    
+    token = Tokenizer.tokenize("http://#{url}")
+
+    throw 'error' if token.nil?
 
     tags.each do |tag|
       @training[tag][token] += 1
@@ -91,6 +88,17 @@ class LinkTrainer
     @training[tag][token].to_i
   end
 
+  def total
+    sum = 0
+    @keywords_for_tag.each_key {|key|
+      sum += @keywords_for_tag[key].count
+    }
+    sum
+  end
+
+  # Not really working
+  # Different strategies could include similiar sequential characters in a link
+  # or substrings that overlap
   def score(link)
     train!
     url = link.url
@@ -99,16 +107,22 @@ class LinkTrainer
     aggregates = Hash[@tags.map do |t|
       [
         t,
-        Rational(tag_totals.fetch(t), tag_totals.fetch('_all').to_i)
+        Rational(@keywords_for_tag[t].count, total)
       ]
     end]
+    token = Tokenizer.tokenize(url)
 
-    Tokenizer.tokenize(url) do |token|
-      @tags.each do |tag|
-        r = Rational(get(tag,token) + 1, tag_totals.fetch(tag).to_i + 1)
-        aggregates[tag] *= r
+    @tags.each do |tag|
+      # r needs to be the percentage matched between the link and any link in a tag
+      min = 0
+      # byebug
+      if @keywords_for_tag[tag].include?(token)
+        min = 1
       end
+      r = Rational(@keywords_for_tag[tag].count, total)
+      aggregates[tag] *= r
     end
+
     aggregates
   end
 
@@ -135,7 +149,7 @@ class LinkTrainer
       if v > max_score
         max_key = k
         max_score = v
-      elsif v == max_score && preference.index(k) > preference.index(max_key)
+      elsif v == max_score && preference.index(k) < preference.index(max_key)
         max_key = k
         max_score = v
       else
