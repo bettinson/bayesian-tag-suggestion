@@ -16,9 +16,9 @@ code machine-learning https://stackoverflow.com/
 ```
 
 A query with a link of `https://codinghorror.com` will give us the following probabilities:
-`{"programming"=>(1/25), "blog"=>(4/25), "code"=>(1/25), "machine-learning"=>(1/25)}`.
+`{"programming"=>(1/5), "blog"=>(2/5), "code"=>(1/5), "machine-learning"=>(1/5)}`.
 
-Thus, `https://www.codinghorror.com is blog with 4/25 accuracy`
+Thus, `https://www.codinghorror.com is blog with 2/5 accuracy`
 
 # Todo
 
