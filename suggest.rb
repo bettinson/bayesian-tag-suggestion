@@ -2,9 +2,7 @@ require_relative 'lib/link_trainer.rb'
 require_relative 'lib/link.rb'
 require "test/unit"
 
-
-
-class TestTokenizer < Test::Unit::TestCase
+class TestSuggestion < Test::Unit::TestCase
   def test_blackbox
     keyfile = File.open('./data/training_links.txt', 'rb')
     lt = LinkTrainer.new(keyfile)
@@ -17,7 +15,6 @@ class TestTokenizer < Test::Unit::TestCase
       classification = lt.classify(l)
       puts "#{l.url} is #{classification.guess} with #{classification.score.to_s} accuracy"
       guess = classification.guess.dup.to_s.encode!('UTF-8', 'UTF-8', :invalid => :replace)
-
       assert_equal(guess, "blog")
     end
   end

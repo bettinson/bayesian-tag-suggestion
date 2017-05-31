@@ -16,7 +16,6 @@ class LinkTrainer
   # this gets all the different tags
   def setup!(training_file)
     @tags = Set.new
-    links = Array.new
     @to_train = Array.new
     @keywords_for_tag = Hash.new { |h, k| h[k] = Set.new }
 
@@ -27,7 +26,6 @@ class LinkTrainer
 
       link = Link.new(url, tags)
       @to_train << link
-      links << link
 
       tags.each do |t|
         @tags << t
@@ -42,15 +40,13 @@ class LinkTrainer
     @totals['_all'] = 0
 
     @training = Hash[@tags.map { |t| [t, Hash.new(0)]}]
-    links.each do |l|
-      write(l)
-    end
   end
 
   def total_for(tag)
     @totals.fetch(tag)
   end
 
+  # Iterates over the @to_train array and writes it to training data
   def train!
     @to_train.each do |link|
       write(link)
@@ -59,6 +55,7 @@ class LinkTrainer
     @to_train = []
   end
 
+  # Writes the link to training data
   def write(link)
     tags = link.tags
     url = link.url
@@ -71,7 +68,6 @@ class LinkTrainer
     # EG: codinghorror.com -> coding horror
     # Not the best approach but it works for now
     # Not implemented, just puts a URL right now
-    
     token = Tokenizer.tokenize("http://#{url}")
 
     throw 'error' if token.nil?
@@ -84,10 +80,12 @@ class LinkTrainer
     end
   end
 
+  # This is a micro-score for the tag and token/keyword
   def get(tag, token)
     @training[tag][token].to_i
   end
 
+  # How many keyword for each tag
   def total
     sum = 0
     @keywords_for_tag.each_key {|key|
@@ -96,7 +94,7 @@ class LinkTrainer
     sum
   end
 
-  # Not really working
+  # Score for a link based on existing training data
   # Different strategies could include similiar sequential characters in a link
   # or substrings that overlap
   def score(link)
@@ -104,47 +102,35 @@ class LinkTrainer
     url = link.url
     tag_totals = @totals
 
+    # aggregates is a hash with key t and value of the ratio between how many keywords
+    # the tag has and the total amount of keywords and tags. This is the normalized
+    # Bayesian score
+
     aggregates = Hash[@tags.map do |t|
       [
         t,
         Rational(@keywords_for_tag[t].count, total)
       ]
     end]
-    token = Tokenizer.tokenize(url)
 
-    @tags.each do |tag|
-      # r needs to be the percentage matched between the link and any link in a tag
-      min = 0
-      # byebug
-      if @keywords_for_tag[tag].include?(token)
-        min = 1
-      end
-      r = Rational(@keywords_for_tag[tag].count, total)
-      aggregates[tag] *= r
-    end
+    token = Tokenizer.tokenize(url)
 
     aggregates
   end
 
-  def normalized_score(url)
-    score = score(url)
-    sum = score.values.inject(&:+)
-
-    Hash[score.map do |tag, aggregate|
-      [tag, (aggregate / sum).to_f]
-    end]
-  end
-
+  # Sorted tags based on values
   def preference
     @tags.sort_by {|t| total_for(t)}
   end
 
+  # Uses the score to classify a link into its most likely tag
   def classify(link)
     score = score(link)
     p score
     max_score = 0.0
     max_key = preference.last
 
+    # Finds the tag with the largest value of match
     score.each do |k, v|
       if v > max_score
         max_key = k
